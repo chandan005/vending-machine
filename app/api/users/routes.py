@@ -51,21 +51,6 @@ async def update(id: str, modify: UserModify):
     else:
         return user
     
-@users_router.put("/deposit/{id}",dependencies=[Depends(validate_object_id)],response_model=UserResponse)
-async def deposit(id: str, payload: UserDepositCoin):
-    json_payload = jsonable_encoder(payload)
-    coins = list(map(int, json_payload.get("coins")))
-    try:
-        user = await depositCoin(id=id, coins=coins)
-    except exceptions.DatabaseException as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except exceptions.UserNotFoundException as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    else:
-        return user
-
 @users_router.delete("/{id}",dependencies=[Depends(validate_object_id)], response_model=dict)
 async def delete(id: str):
     try:
@@ -75,6 +60,8 @@ async def delete(id: str):
     except exceptions.UserNotFoundException as e:
         raise HTTPException(status_code=400, detail=str(e))
     except exceptions.DepositExistsBeforeDeletionException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except exceptions.ProductExistsForSellerBeforeDeletionException as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

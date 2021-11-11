@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Optional, List
 from pydantic import Field, constr
 
-from app.api.helpers.common import BaseModel, PyObjectId
+from app.api.helpers.common import BaseModel
 
 class Role(str, Enum):
     """[summary]
@@ -23,7 +23,6 @@ class Deposit(int, Enum):
     [description]
         Simple enumeration to check for allowed deposit types.
     """
-    zero = 0
     five = 5
     ten = 10
     twenty = 20
@@ -31,7 +30,7 @@ class Deposit(int, Enum):
     hundred = 100
 
 class BaseUser(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    # id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: Optional[str]
     password: Optional[str]
     role: Optional[Role]
@@ -61,23 +60,12 @@ class UserModify(BaseModel):
             }
         }
 
-class UserDepositCoin(BaseModel):
-    coins: List[Deposit]
-    
-    class Config:
-        schema_extra = {
-            "example": {
-                "coins": [Deposit.five, Deposit.ten]
-            }
-        }
-        
-class UserInDB(BaseUser):
-    pass
-
 class UserResponse(BaseModel):
-    _id: PyObjectId
+    id: str
     username: str
     role: Role
     deposit: int
     created_at: datetime.datetime
     modified_at: datetime.datetime
+
+    

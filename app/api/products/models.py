@@ -8,48 +8,44 @@ from app.api.helpers.common import BaseModel, PyObjectId
 
 
 class BaseProduct(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    productName: Optional[str]
-    amountAvailable: Optional[PositiveInt]
+    product_name: Optional[str]
+    amount_available: Optional[PositiveInt]
     cost: Optional[PositiveFloat]
-    sellerId: PyObjectId =  Field(default_factory=PyObjectId)
+    seller_id: PyObjectId =  Field(default_factory=PyObjectId)
 
 class ProductCreate(BaseModel):
-    productName: constr(strip_whitespace=True, min_length=1)
-    amountAvailable: PositiveInt
+    product_name: constr(strip_whitespace=True, min_length=1)
+    amount_available: PositiveInt
     cost: PositiveFloat
 
     class Config:
         schema_extra = {
         "example": {
-            "productName": "Mars",
-            "amountAvailable": 10,
+            "product_name": "Mars",
+            "amount_available": 10,
             "cost": 9.99
         }
     }
 
 class ProductModify(BaseModel):
-    productName: Optional[str]
-    amountAvailable: Optional[PositiveInt]
+    product_name: Optional[str]
+    amount_available: Optional[PositiveInt]
     cost: Optional[PositiveFloat]
 
     class Config:
         schema_extra = {
             "example": {
-                "productName": "Venus",
-                "amountAvailable": 10,
+                "product_name": "Venus",
+                "amount_available": 10,
                 "cost": 9.99
         }
     }
 
-class ProductInDB(BaseProduct):
-    pass
-
 class ProductResponse(BaseProduct):
-    id: PyObjectId
-    amountAvailable: PositiveInt
+    id: str
+    product_name: str
+    amount_available: PositiveInt
     cost: PositiveFloat
-    sellerId: PyObjectId
+    seller_id: str
     created_at: datetime.datetime
     modified_at: datetime.datetime
-    pass
