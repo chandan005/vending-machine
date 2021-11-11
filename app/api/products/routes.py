@@ -54,7 +54,9 @@ async def update(product_id: str, seller_id: str,  modify: ProductModify):
         product = await updateProduct(seller_id=seller_id, product_id=product_id, product_payload=json_payload)
     except exceptions.DatabaseException as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except exceptions.UserNotFoundException as e:
+    except exceptions.ProductNotFoundException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except exceptions.ProductDoesNotBelongToSellerException as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -67,9 +69,9 @@ async def delete(product_id: str, seller_id: str):
         product = await deleteProduct(seller_id=seller_id, product_id=product_id)
     except exceptions.DatabaseException as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except exceptions.UserNotFoundException as e:
+    except exceptions.ProductNotFoundException as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except exceptions.DepositExistsBeforeDeletionException as e:
+    except exceptions.ProductDoesNotBelongToSellerException as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

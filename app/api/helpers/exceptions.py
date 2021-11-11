@@ -8,6 +8,16 @@ class UserExistsException(Exception):
         # Call the base class constructor with the parameters it needs
         super(UserExistsException, self).__init__(message)
 
+class UserNotBuyerException(Exception):
+    def __init__(self, message='USER NOT BUYER.'):
+        # Call the base class constructor with the parameters it needs
+        super(UserNotBuyerException, self).__init__(message)
+        
+class UserInSufficientDepositException(Exception):
+    def __init__(self, message='INSUFFICIENT DEPOSIT AMOUNT AVAILABLE FOR USER.'):
+        # Call the base class constructor with the parameters it needs
+        super(UserInSufficientDepositException, self).__init__(message)
+        
 class SellerDoesNotExistException(Exception):
     def __init__(self, message='SELLER DOES NOT EXIST.'):
         # Call the base class constructor with the parameters it needs
@@ -32,6 +42,11 @@ class DepositExistsBeforeDeletionException(Exception):
     def __init__(self, message='DEPOSIT EXISTS FOR USER'):
         # Call the base class constructor with the parameters it needs
         super(DepositExistsBeforeDeletionException, self).__init__(message)
+        
+class ProductExistsForSellerBeforeDeletionException(Exception):
+    def __init__(self, message='PRODUCT EXISTS FOR SELLER'):
+        # Call the base class constructor with the parameters it needs
+        super(ProductExistsForSellerBeforeDeletionException, self).__init__(message)
 
 class DepositNotAllowedException(Exception):
     def __init__(self, message='DEPOSIT NOT ALLOWED. ALLOWED VALUES ARE: [5, 10, 20, 50 ,100]'):

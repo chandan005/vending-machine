@@ -50,7 +50,7 @@ async def update(id: str, modify: UserModify):
         raise HTTPException(status_code=400, detail=str(e))
     else:
         return user
-
+    
 @users_router.delete("/{id}",dependencies=[Depends(validate_object_id)], response_model=dict)
 async def delete(id: str):
     try:
@@ -60,6 +60,8 @@ async def delete(id: str):
     except exceptions.UserNotFoundException as e:
         raise HTTPException(status_code=400, detail=str(e))
     except exceptions.DepositExistsBeforeDeletionException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except exceptions.ProductExistsForSellerBeforeDeletionException as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

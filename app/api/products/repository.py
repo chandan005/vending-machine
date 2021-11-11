@@ -18,6 +18,7 @@ async def getProductById(id):
         logger.info("Failed to retrieve product [%s]",  id)
         raise exceptions.ProductNotFoundException()
     else:
+        product = mongodb_validators.fix_product_seller_id(product)
         return product
 
 async def getAllProducts(limit: int = 10, skip: int = 0):
@@ -33,53 +34,69 @@ async def getAllProducts(limit: int = 10, skip: int = 0):
     aggregation.append(facet_stage)
     products_cursor = db.vending.products.aggregate(pipeline=aggregation, allowDiskUse=True)
     products = await products_cursor.to_list(length=limit)
-    return products
+    return list(map(mongodb_validators.fix_product_seller_id, products))
     
 
 async def createProduct(seller_id, product_payload):
+    
     # Check if seller exists with given username
     seller = await db.vending.users.find_one({"$and": [{"_id": ObjectId(seller_id), "role": Role.seller}]})
     if seller is not None:
-        
-        # Add Timestamps
-        product_payload["seller_id"] = ObjectId(seller_id)
-        product_payload["created_at"] = datetime.datetime.utcnow()
-        product_payload["modified_at"] = datetime.datetime.utcnow()
-        
-        product_op = await db.vending.products.insert_one(product_payload)
-        if product_op.inserted_id:
-            prodcut = await db.vending.products.find_one({"_id": product_op.inserted_id})
-            return prodcut
-        else:
-            logger.info("Failed to insert product in db for")
-            raise exceptions.DatabaseException()
+        try:
+            existing_product_db = await mongodb_validators.get_product_by_name_or_404(name=product_payload["product_name"])
+            product_payload["modified_at"] = datetime.datetime.utcnow()
+            product_payload["amount_available"] = existing_product_db.get("amount_available") + product_payload.get("amount_available")
+            product_op = await db.vending.products.update_one({"_id": ObjectId(existing_product_db["_id"])}, {"$set": product_payload})
+            if product_op.modified_count:
+                product = await db.vending.products.find_one({"_id": ObjectId(existing_product_db["_id"])})
+                product = mongodb_validators.fix_product_seller_id(product)
+                return product
+            else:
+                logger.info("Failed to update product [%s] while updatigng in db.",  existing_product_db["_id"])
+                raise exceptions.DatabaseException()
+            
+        except exceptions.ProductNotFoundException as e:
+            # Add Timestamps
+            product_payload["seller_id"] = ObjectId(seller_id)
+            product_payload["created_at"] = datetime.datetime.utcnow()
+            product_payload["modified_at"] = datetime.datetime.utcnow()
+            
+            product_op = await db.vending.products.insert_one(product_payload)
+            if product_op.inserted_id:
+                product = await db.vending.products.find_one({"_id": product_op.inserted_id})
+                product = mongodb_validators.fix_product_seller_id(product)
+                return product
+            else:
+                logger.info("Failed to insert product in db for")
+                raise exceptions.DatabaseException()
     else:
         logger.info("Seller Does not Exist [%s]",  str(seller_id))
         raise exceptions.SellerDoesNotExistException()
 
 async def updateProduct(seller_id, product_id, product_payload):
-    seller = await mongodb_validators.get_user_and_check_if_seller(id=seller_id)
-    if seller is None:
+    seller_db = await mongodb_validators.get_user_and_check_if_seller(id=seller_id)
+    if seller_db is None:
         raise exceptions.SellerDoesNotExistException()
     else:
-        product = await mongodb_validators.get_product_or_404(id=product_id)
-        if product is not None:
-            if "seller_id" not in product:
+        product_db = await mongodb_validators.get_product_or_404(id=product_id)
+        if product_db is not None:
+            if "seller_id" not in product_db:
                 raise exceptions.ProductDoesNotBelongToSellerException()
             else:
-                if product.get("seller_id") != seller.get("_id"):
+                if product_db.get("seller_id") != seller_db.get("_id"):
                     raise exceptions.ProductDoesNotBelongToSellerException()
                 else:
-                    product_payload = {**product, **product_payload}
+                    product_payload = {**product_db, **product_payload}
                     
                     # Add Timestamp
                     product_payload["modified_at"] = datetime.datetime.utcnow()
-                    product_op = await db.vending.products.update_one({"_id": ObjectId(id)}, {"$set": product_payload})
+                    product_op = await db.vending.products.update_one({"_id": ObjectId(product_id)}, {"$set": product_payload})
                     if product_op.modified_count:
-                        user = await db.vending.products.find_one({"_id": ObjectId(id)})
-                        return user
+                        product = await db.vending.products.find_one({"_id": ObjectId(product_id)})
+                        product = mongodb_validators.fix_product_seller_id(product)
+                        return product
                     else:
-                        logger.info("Failed to update product [%s] while updatigng in db.",  id)
+                        logger.info("Failed to update product [%s] while updatigng in db.",  product_id)
                         raise exceptions.DatabaseException()
         else:
             raise exceptions.ProductNotFoundException()

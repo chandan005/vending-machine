@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Optional, List
 from pydantic import Field, constr
 
-from app.api.helpers.common import BaseModel, PyObjectId
+from app.api.helpers.common import BaseModel
 
 class Role(str, Enum):
     """[summary]
@@ -23,7 +23,6 @@ class Deposit(int, Enum):
     [description]
         Simple enumeration to check for allowed deposit types.
     """
-    zero = 0
     five = 5
     ten = 10
     twenty = 20
@@ -31,11 +30,11 @@ class Deposit(int, Enum):
     hundred = 100
 
 class BaseUser(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    # id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: Optional[str]
     password: Optional[str]
     role: Optional[Role]
-    deposit: Optional[Deposit]
+    deposit: Optional[int]
 
 class UserCreate(BaseModel):
     username: constr(strip_whitespace=True, min_length=5)
@@ -44,12 +43,12 @@ class UserCreate(BaseModel):
 
     class Config:
         schema_extra = {
-        "example": {
-            "username": "chandansingh005",
-            "password": "asdfghjk",
-            "role": Role.buyer
+            "example": {
+                "username": "chandansingh005",
+                "password": "asdfghjk",
+                "role": Role.buyer
+            }
         }
-    }
 
 class UserModify(BaseModel):
     username: Optional[constr(strip_whitespace=True, min_length=5)]
@@ -58,17 +57,15 @@ class UserModify(BaseModel):
         schema_extra = {
             "example": {
                 "username": "chandansingh005"
+            }
         }
-    }
 
-class UserInDB(BaseUser):
-    pass
-
-class UserResponse(BaseUser):
-    _id: PyObjectId
+class UserResponse(BaseModel):
+    id: str
     username: str
     role: Role
-    deposit: Deposit
+    deposit: int
     created_at: datetime.datetime
     modified_at: datetime.datetime
-    pass
+
+    
