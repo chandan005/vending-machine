@@ -8,6 +8,11 @@ class UserExistsException(Exception):
         # Call the base class constructor with the parameters it needs
         super(UserExistsException, self).__init__(message)
 
+class UserNotBuyerException(Exception):
+    def __init__(self, message='USER NOT BUYER.'):
+        # Call the base class constructor with the parameters it needs
+        super(UserNotBuyerException, self).__init__(message)
+        
 class SellerDoesNotExistException(Exception):
     def __init__(self, message='SELLER DOES NOT EXIST.'):
         # Call the base class constructor with the parameters it needs

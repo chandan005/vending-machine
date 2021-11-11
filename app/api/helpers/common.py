@@ -29,7 +29,7 @@ class BaseModel(pydantic.BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-        extra = pydantic.Extra.forbid  # forbid sending additional fields/properties
+        # extra = pydantic.Extra.forbid  # forbid sending additional fields/properties
         anystr_strip_whitespace = True  # strip whitespaces from strings
         json_encoders = {ObjectId: str, datetime: lambda dt: dt.isoformat()}
 
@@ -56,20 +56,4 @@ def validate_object_id(id: str):
     	logging.warning("Invalid Object ID")
     	raise HTTPException(status_code=400, detail="Invalid Object ID")
     return _id
-
-
-def ResponseModel(data):
-    return {
-        "data": [
-            data
-        ]
-    }
-
-
-def ErrorResponseModel(error, code, message):
-    return {
-        "error": error,
-        "code": code,
-        "message": message
-    }
     

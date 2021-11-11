@@ -1,10 +1,11 @@
 import datetime
 import logging
-from app.api.users.models import Deposit
+from functools import reduce
+from typing import List
 
 from bson.objectid import ObjectId
-from fastapi import HTTPException
 
+from app.api.users.models import Deposit, Role
 from app.database.mongodb import db
 from app.database import mongodb_validators
 from app.api.helpers import exceptions
@@ -64,6 +65,32 @@ async def updateUser(id, user_payload):
         else:
             logger.info("Failed to update user [%s] while updatigng in db.",  id)
             raise exceptions.DatabaseException()
+
+async def depositCoin(id: str, coins: List[Deposit]):
+    user_db = await db.vending.users.find_one({"_id": ObjectId(id)})
+    
+    if user_db is None:
+        logger.info("Failed to retrieve user [%s]",  id)
+        raise exceptions.UserNotFoundException()
+    if user_db.get("role") != Role.buyer:
+        logger.info("User not buyer [%s]",  id)
+        raise exceptions.UserNotBuyerException()
+    
+    # Get Current deposit for user
+    current_deposit = user_db.get("deposit") if "deposit" in user_db else 0
+    coins_sum = reduce(lambda a,b:a+b,list(map(int, coins)))
+    
+    user_payload = user_db
+    user_payload["deposit"] = current_deposit + coins_sum
+    user_payload["modified_at"] = datetime.datetime.utcnow()
+    
+    user_op = await db.vending.users.update_one({"_id": ObjectId(id)}, {"$set": user_payload})
+    if user_op.modified_count:
+        user = await db.vending.users.find_one({"_id": ObjectId(id)})
+        return user
+    else:
+        logger.info("Failed to update user [%s] while updatigng in db.",  id)
+        raise exceptions.DatabaseException()
     
 async def deleteUser(id):
     user = await db.vending.users.find_one({"_id": ObjectId(id)})

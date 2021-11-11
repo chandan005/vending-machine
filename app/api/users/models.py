@@ -35,7 +35,7 @@ class BaseUser(BaseModel):
     username: Optional[str]
     password: Optional[str]
     role: Optional[Role]
-    deposit: Optional[Deposit]
+    deposit: Optional[int]
 
 class UserCreate(BaseModel):
     username: constr(strip_whitespace=True, min_length=5)
@@ -44,12 +44,12 @@ class UserCreate(BaseModel):
 
     class Config:
         schema_extra = {
-        "example": {
-            "username": "chandansingh005",
-            "password": "asdfghjk",
-            "role": Role.buyer
+            "example": {
+                "username": "chandansingh005",
+                "password": "asdfghjk",
+                "role": Role.buyer
+            }
         }
-    }
 
 class UserModify(BaseModel):
     username: Optional[constr(strip_whitespace=True, min_length=5)]
@@ -58,17 +58,26 @@ class UserModify(BaseModel):
         schema_extra = {
             "example": {
                 "username": "chandansingh005"
+            }
         }
-    }
 
+class UserDepositCoin(BaseModel):
+    coins: List[Deposit]
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "coins": [Deposit.five, Deposit.ten]
+            }
+        }
+        
 class UserInDB(BaseUser):
     pass
 
-class UserResponse(BaseUser):
+class UserResponse(BaseModel):
     _id: PyObjectId
     username: str
     role: Role
-    deposit: Deposit
+    deposit: int
     created_at: datetime.datetime
     modified_at: datetime.datetime
-    pass
