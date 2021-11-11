@@ -1,8 +1,8 @@
 
 import datetime
 
-from typing import Optional, PositiveInt, PositiveFloat
-from pydantic import Field, constr
+from typing import Optional
+from pydantic import Field, constr, PositiveInt, PositiveFloat
 
 from app.api.helpers.common import BaseModel, PyObjectId
 
@@ -12,7 +12,7 @@ class BaseProduct(BaseModel):
     productName: Optional[str]
     amountAvailable: Optional[PositiveInt]
     cost: Optional[PositiveFloat]
-    sellerId: Field(default_factory=PyObjectId)
+    sellerId: PyObjectId =  Field(default_factory=PyObjectId)
 
 class ProductCreate(BaseModel):
     productName: constr(strip_whitespace=True, min_length=1)
