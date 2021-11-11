@@ -117,3 +117,24 @@ async def buyProduct(user_id: str, product_id: str, product_amount: int):
         else:
             raise exceptions.ProductStockUnavailableException()
         
+async def resetDeposit(user_id: str):
+    user_db = await db.vending.users.find_one({"_id": ObjectId(user_id)})
+    
+    if user_db is None:
+        logger.info("Failed to retrieve user [%s]",  user_id)
+        raise exceptions.UserNotFoundException()
+    if user_db.get("role") != Role.buyer:
+        logger.info("User not buyer [%s]",  user_id)
+        raise exceptions.UserNotBuyerException()
+    
+    user_payload = user_db
+    user_payload["deposit"] = 0
+    user_payload["modified_at"] = datetime.datetime.utcnow()
+    user_op = await db.vending.users.update_one({"_id": ObjectId(user_id)}, {"$set": user_payload})
+    if user_op.modified_count:
+        user = await db.vending.users.find_one({"_id": ObjectId(user_id)})
+        user = mongodb_validators.fix_id(user)
+        return user
+    else:
+        logger.info("Failed to update user [%s] while updatigng in db.",  user_id)
+        raise exceptions.DatabaseException()

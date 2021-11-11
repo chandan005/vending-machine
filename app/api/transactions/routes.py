@@ -25,7 +25,7 @@ async def deposit(user_id: str, payload: DepositCoin):
     else:
         return deposit
 
-@transactions_router.post("/buy/{id}",response_model=PurchasedTransaction)
+@transactions_router.post("/buy/{user_id}",response_model=PurchasedTransaction)
 async def deposit(user_id: str, payload: BuyProduct):
     json_payload = jsonable_encoder(payload)
     try:
@@ -44,3 +44,18 @@ async def deposit(user_id: str, payload: BuyProduct):
         raise HTTPException(status_code=400, detail=str(e))
     else:
         return transaction
+
+@transactions_router.post("/reset/{user_id}",response_model=UserResponse)
+async def deposit(user_id: str):
+    try:
+        user = await resetDeposit(user_id=user_id)
+    except exceptions.DatabaseException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except exceptions.UserNotFoundException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except exceptions.UserNotBuyerException as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    else:
+        return user
