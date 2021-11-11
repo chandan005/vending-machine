@@ -1,0 +1,6 @@
+fastapi
+motor
+mangum
+pydantic[email]
+PyJWT
+aiohttp
