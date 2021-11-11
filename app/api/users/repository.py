@@ -6,24 +6,17 @@ from bson.objectid import ObjectId
 from fastapi import HTTPException
 
 from app.database.mongodb import db
+from app.database import mongodb_validators
 from app.api.helpers import exceptions
 
 logger = logging.getLogger("gunicorn.error")
 
-def make_dependent_response(user, dependent_id):
-    dependent_response = [d for d in user.get("dependents") if d['dependent_id'] == dependent_id]
-    if len(dependent_response) > 0:
-        return dependent_response[0]
-    else:
-        return None
-
-async def getUserById(id: str):
+async def getUserById(id: str): 
     user = await db.vending.users.find_one({"_id": ObjectId(id)})
     if user is None:
         logger.info("Failed to retrieve user [%s]",  id)
         raise exceptions.UserNotFoundException()
     else:
-        print(user)
         return user
 
 async def createUser(user_payload):
@@ -73,13 +66,13 @@ async def updateUser(id, user_payload):
             raise exceptions.DatabaseException()
     
 async def deleteUser(id):
-    user = await db.vending.users.find_one({"_id": ObjectId(id_)})
+    user = await db.vending.users.find_one({"_id": ObjectId(id)})
     if user is not None:
         if user.get("deposit") > 0:
             raise exceptions.DepositExistsBeforeDeletionException()
 
-        feed_op = await db.vending.feeds.delete_one({"_id": user.get("_id")})
-        if feed_op.deleted_count:
+        user_op = await db.vending.users.delete_one({"_id": user.get("_id")})
+        if user_op.deleted_count:
             return dict()
     else:
         logger.info("Failed to retrieve user [%s]",  id)

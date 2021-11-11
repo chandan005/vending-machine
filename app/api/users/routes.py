@@ -54,7 +54,7 @@ async def update(id: str, modify: UserModify):
 @users_router.delete("/{id}",dependencies=[Depends(validate_object_id)], response_model=dict)
 async def delete(id: str):
     try:
-        feed = await deleteUser(id=id)
+        user = await deleteUser(id=id)
     except exceptions.DatabaseException as e:
         raise HTTPException(status_code=400, detail=str(e))
     except exceptions.UserNotFoundException as e:
@@ -64,4 +64,4 @@ async def delete(id: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     else:
-        return feed
+        return user
