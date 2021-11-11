@@ -10,20 +10,12 @@ from app.api.helpers import exceptions
 
 logger = logging.getLogger("gunicorn.error")
 
-def make_dependent_response(user, dependent_id):
-    dependent_response = [d for d in user.get("dependents") if d['dependent_id'] == dependent_id]
-    if len(dependent_response) > 0:
-        return dependent_response[0]
-    else:
-        return None
-
 async def getUserById(id: str):
     user = await db.vending.users.find_one({"_id": ObjectId(id)})
     if user is None:
         logger.info("Failed to retrieve user [%s]",  id)
         raise exceptions.UserNotFoundException()
     else:
-        print(user)
         return user
 
 async def createUser(user_payload):

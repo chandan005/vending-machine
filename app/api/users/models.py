@@ -3,7 +3,6 @@ import datetime
 
 from enum import Enum
 
-from bson import ObjectId
 from typing import Optional, List
 from pydantic import Field, constr
 
@@ -41,14 +40,14 @@ class BaseUser(BaseModel):
 class UserCreate(BaseModel):
     username: constr(strip_whitespace=True, min_length=5)
     password: constr(strip_whitespace=True, min_length=8)
-    role: Role = Field(Role.buyer, alias='role')
+    role: Role = Field(Role.buyer)
 
     class Config:
         schema_extra = {
         "example": {
             "username": "chandansingh005",
             "password": "asdfghjk",
-            "role": "buyer"
+            "role": Role.buyer
         }
     }
 
