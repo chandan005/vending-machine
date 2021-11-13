@@ -5,10 +5,11 @@ from typing import List
 
 from bson.objectid import ObjectId
 
-from app.api.users.models import Deposit, Role
+from app.api.users.models import Role
 from app.database.mongodb import db
-from app.database import mongodb_validators
+from app.api.helpers import deps
 from app.api.helpers import exceptions
+from app.api.auth.security import get_password_hash
 
 logger = logging.getLogger("gunicorn.error")
 
@@ -18,11 +19,12 @@ async def getUserById(id: str):
         logger.info("Failed to retrieve user [%s]",  id)
         raise exceptions.UserNotFoundException()
     else:
-        user = mongodb_validators.fix_id(user)
+        user = deps.fix_id(user)
         return user
 
 async def createUser(user_payload):
     # Check if user exists with given username
+    user_payload["password"] = get_password_hash(password=user_payload["password"])
     user = await db.vending.users.find_one({"username": user_payload.get("username")})
     if user is None:
         # Add Timestamps
@@ -30,12 +32,12 @@ async def createUser(user_payload):
         user_payload["modified_at"] = datetime.datetime.utcnow()
         
         # Add default deposit of zero for newly created users
-        user_payload["deposit"] = Deposit.zero
+        user_payload["deposit"] = 0
         
         user_op = await db.vending.users.insert_one(user_payload)
         if user_op.inserted_id:
             user = await db.vending.users.find_one({"_id": user_op.inserted_id})
-            user = mongodb_validators.fix_id(user)
+            user = deps.fix_id(user)
             return user
         else:
             logger.info("Failed to insert user in db for [%s]",  str(user_payload["username"]))
@@ -63,7 +65,7 @@ async def updateUser(id, user_payload):
         user_op = await db.vending.users.update_one({"_id": ObjectId(id)}, {"$set": user_payload})
         if user_op.modified_count:
             user = await db.vending.users.find_one({"_id": ObjectId(id)})
-            user = mongodb_validators.fix_id(user)
+            user = deps.fix_id(user)
             return user
         else:
             logger.info("Failed to update user [%s] while updatigng in db.",  id)
@@ -76,7 +78,7 @@ async def deleteUser(id):
             raise exceptions.DepositExistsBeforeDeletionException()
         
         if user.get("role") == Role.seller:
-            seller_has_products = mongodb_validators.does_seller_have_products(seller_id=user["_id"])
+            seller_has_products = deps.does_seller_have_products(seller_id=user["_id"])
             if seller_has_products:
                 raise exceptions.ProductExistsForSellerBeforeDeletionException()
             

@@ -7,10 +7,11 @@ from .models import *
 from .repository import *
 from app.api.helpers import exceptions
 from app.api.helpers.common import validate_object_id
+from app.api.helpers.deps import get_current_user
 
 products_router = APIRouter()
 
-@products_router.post("/", response_model=ProductResponse)
+@products_router.post("/", dependencies=[Depends(get_current_user)], response_model=ProductResponse)
 async def create(seller_id: str, create: ProductCreate):
     json_payload = jsonable_encoder(create)
     try:
@@ -47,7 +48,8 @@ async def read_all():
         raise HTTPException(status_code=404, detail=str(e))
     else:
         return products
-@products_router.put("/", response_model=ProductResponse)
+
+@products_router.put("/", dependencies=[Depends(get_current_user)], response_model=ProductResponse)
 async def update(product_id: str, seller_id: str,  modify: ProductModify):
     json_payload = jsonable_encoder(modify)
     try:
@@ -63,7 +65,7 @@ async def update(product_id: str, seller_id: str,  modify: ProductModify):
     else:
         return product
 
-@products_router.delete("/", response_model=dict)
+@products_router.delete("/", dependencies=[Depends(get_current_user)], response_model=dict)
 async def delete(product_id: str, seller_id: str):
     try:
         product = await deleteProduct(seller_id=seller_id, product_id=product_id)

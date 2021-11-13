@@ -1,9 +1,8 @@
 
 import datetime
-
 from enum import Enum
+from typing import Optional
 
-from typing import Optional, List
 from pydantic import Field, constr
 
 from app.api.helpers.common import BaseModel
@@ -30,7 +29,6 @@ class Deposit(int, Enum):
     hundred = 100
 
 class BaseUser(BaseModel):
-    # id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: Optional[str]
     password: Optional[str]
     role: Optional[Role]
