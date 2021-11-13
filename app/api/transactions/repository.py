@@ -2,13 +2,12 @@ import datetime
 import logging
 from functools import reduce
 from typing import List
-from app.api.transactions.models import PurchasedProduct
 
 from bson.objectid import ObjectId
 
-from app.api.users.models import Deposit, Role, UserResponse
+from app.api.users.models import Deposit, Role
 from app.database.mongodb import db
-from app.database import mongodb_validators
+from app.api.helpers import deps
 from app.api.helpers import exceptions
 
 logger = logging.getLogger()
@@ -51,7 +50,7 @@ async def depositCoin(user_id: str, coins: List[Deposit]):
     user_op = await db.vending.users.update_one({"_id": ObjectId(user_id)}, {"$set": user_payload})
     if user_op.modified_count:
         user = await db.vending.users.find_one({"_id": ObjectId(user_id)})
-        user = mongodb_validators.fix_id(user)
+        user = deps.fix_id(user)
         return user
     else:
         logger.info("Failed to update user [%s] while updatigng in db.",  user_id)
@@ -67,7 +66,7 @@ async def buyProduct(user_id: str, product_id: str, product_amount: int):
         logger.info("User not buyer [%s]",  user_id)
         raise exceptions.UserNotBuyerException()
     try:
-        product_db = await mongodb_validators.get_product_or_404(id=product_id)
+        product_db = await deps.get_product_or_404(id=product_id)
     except exceptions.ProductNotFoundException as e:
         raise exceptions.ProductNotFoundException()
     else:
@@ -133,7 +132,7 @@ async def resetDeposit(user_id: str):
     user_op = await db.vending.users.update_one({"_id": ObjectId(user_id)}, {"$set": user_payload})
     if user_op.modified_count:
         user = await db.vending.users.find_one({"_id": ObjectId(user_id)})
-        user = mongodb_validators.fix_id(user)
+        user = deps.fix_id(user)
         return user
     else:
         logger.info("Failed to update user [%s] while updatigng in db.",  user_id)

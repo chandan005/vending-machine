@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Body, Response
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from starlette.status import HTTP_201_CREATED
 
 from .models import *
 from .repository import *
 from app.api.helpers import exceptions
 from app.api.helpers.common import validate_object_id
+from app.api.helpers.deps import get_current_user
 
 users_router = APIRouter()
 
@@ -24,7 +23,7 @@ async def create(create: UserCreate):
     else:
         return user
     
-@users_router.get("/{id}", dependencies=[Depends(validate_object_id)], response_model=UserResponse)
+@users_router.get("/{id}", dependencies=[Depends(validate_object_id), Depends(get_current_user)], response_model=UserResponse)
 async def read(id: str):
     try:
         user = await getUserById(id=id)
@@ -37,7 +36,7 @@ async def read(id: str):
     else:
         return user
 
-@users_router.put("/{id}",dependencies=[Depends(validate_object_id)],response_model=UserResponse)
+@users_router.put("/{id}",dependencies=[Depends(validate_object_id), Depends(get_current_user)],response_model=UserResponse)
 async def update(id: str, modify: UserModify):
     json_payload = jsonable_encoder(modify)
     try:
@@ -51,7 +50,7 @@ async def update(id: str, modify: UserModify):
     else:
         return user
     
-@users_router.delete("/{id}",dependencies=[Depends(validate_object_id)], response_model=dict)
+@users_router.delete("/{id}",dependencies=[Depends(validate_object_id), Depends(get_current_user)], response_model=dict)
 async def delete(id: str):
     try:
         user = await deleteUser(id=id)
